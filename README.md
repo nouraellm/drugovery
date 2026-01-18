@@ -2,6 +2,10 @@
 
 A comprehensive MVP platform for managing compound libraries, running ML predictions, tracking experiments, and generating reports for drug discovery applications.
 
+
+<img width="1437" height="787" alt="Screenshot 2026-01-18 at 05 49 30" src="https://github.com/user-attachments/assets/73442577-af1c-45da-b028-db18a0e81ab2" />
+
+
 ## Features
 
 - **Compound Library Management**: Upload, search, and manage chemical compounds with SMILES notation
