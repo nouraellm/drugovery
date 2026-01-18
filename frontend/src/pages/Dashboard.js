@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Grid, Paper, Typography, Box } from '@mui/material';
 import {
   Science as ScienceIcon,
@@ -13,26 +14,39 @@ export default function Dashboard() {
     predictions: 0,
     experiments: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      // Fetch all items to get accurate counts (with reasonable limits)
+      const [compounds, predictions, experiments] = await Promise.all([
+        compoundsAPI.list({ limit: 1000 }),
+        predictionsAPI.list({ limit: 1000 }),
+        experimentsAPI.list({ limit: 1000 }),
+      ]);
+      setStats({
+        compounds: compounds.data?.length || 0,
+        predictions: predictions.data?.length || 0,
+        experiments: experiments.data?.length || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      // Set to 0 on error to show something
+      setStats({
+        compounds: 0,
+        predictions: 0,
+        experiments: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [compounds, predictions, experiments] = await Promise.all([
-          compoundsAPI.list({ limit: 1 }),
-          predictionsAPI.list({ limit: 1 }),
-          experimentsAPI.list({ limit: 1 }),
-        ]);
-        setStats({
-          compounds: compounds.data.length > 0 ? compounds.headers['x-total-count'] || 0 : 0,
-          predictions: predictions.data.length > 0 ? predictions.headers['x-total-count'] || 0 : 0,
-          experiments: experiments.data.length > 0 ? experiments.headers['x-total-count'] || 0 : 0,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      }
-    };
     fetchStats();
-  }, []);
+  }, [location.pathname]); // Refresh when navigating to dashboard
 
   const StatCard = ({ title, value, icon, color }) => (
     <Paper
