@@ -112,7 +112,7 @@ mlflow server --backend-store-uri postgresql://postgres:postgres@localhost/mlflo
 ## Project Structure
 
 ```
-nlp/
+drugovery/
 ├── backend/
 │   ├── app/
 │   │   ├── api/
