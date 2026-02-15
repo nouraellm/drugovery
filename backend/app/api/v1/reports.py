@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
-from io import BytesIO
+from io import BytesIO, StringIO
 import csv
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -30,7 +30,7 @@ def export_compounds_csv(
     else:
         compounds = db.query(Compound).all()
     
-    output = BytesIO()
+    output = StringIO()
     writer = csv.writer(output)
     
     # Write header
@@ -77,7 +77,7 @@ def export_predictions_csv(
     
     predictions = query.all()
     
-    output = BytesIO()
+    output = StringIO()
     writer = csv.writer(output)
     
     # Write header
