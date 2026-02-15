@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -20,6 +20,12 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Alert,
+  AlertTitle,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -27,6 +33,7 @@ import {
   Delete as DeleteIcon,
   History as HistoryIcon,
 } from '@mui/icons-material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { compoundsAPI } from '../services/api';
 
 export default function Compounds() {
@@ -41,6 +48,15 @@ export default function Compounds() {
     molecular_formula: '',
     molecular_weight: '',
   });
+
+  // Import State
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
+
+
 
   useEffect(() => {
     fetchCompounds();
@@ -111,17 +127,71 @@ export default function Compounds() {
     }
   };
 
+  // Import Handlers
+  const handleOpenImportDialog = () => {
+    setImportDialogOpen(true);
+    setImportFile(null);
+    setImportResult(null);
+  };
+
+  const handleCloseImportDialog = () => {
+    setImportDialogOpen(false);
+    setImportFile(null);
+    setImportResult(null);
+  };
+
+  const handleFileChange = (event) => {
+    if (event.target.files && event.target.files[0]) {
+      setImportFile(event.target.files[0]);
+      setImportResult(null);
+    }
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', importFile);
+
+    try {
+      const response = await compoundsAPI.importFile(formData);
+      setImportResult(response.data);
+      fetchCompounds(); // Refresh list on success
+    } catch (error) {
+      console.error('Error importing compounds:', error);
+      setImportResult({
+        error: error.response?.data?.detail || 'Error importing file',
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Compounds</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Compound
-        </Button>
+        <Box>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<CloudUploadIcon />}
+            onClick={handleOpenImportDialog}
+            sx={{ mr: 2 }}
+          >
+            Import
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Compound
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
@@ -180,6 +250,7 @@ export default function Compounds() {
         </Table>
       </TableContainer>
 
+      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           {editingCompound ? 'Edit Compound' : 'Add Compound'}
@@ -227,6 +298,102 @@ export default function Compounds() {
           <Button onClick={handleSubmit} variant="contained">
             {editingCompound ? 'Update' : 'Create'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog
+        open={importDialogOpen}
+        onClose={handleCloseImportDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Import Compounds</DialogTitle>
+        <DialogContent>
+          {!importResult && (
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <input
+                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                style={{ display: 'none' }}
+                id="raised-button-file"
+                type="file"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+              />
+              <label htmlFor="raised-button-file">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{ mb: 2 }}
+                >
+                  Select File (CSV or Excel)
+                </Button>
+              </label>
+              {importFile && (
+                <Typography variant="body1" sx={{ mt: 1 }}>
+                  Selected: {importFile.name}
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          {importing && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 1 }}>
+              <CircularProgress />
+            </Box>
+          )}
+
+          {importResult && (
+            <Box sx={{ mt: 2 }}>
+              {importResult.error ? (
+                <Alert severity="error">
+                  <AlertTitle>Import Failed</AlertTitle>
+                  {importResult.error}
+                </Alert>
+              ) : (
+                <Box>
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    <AlertTitle>Import Completed</AlertTitle>
+                    Successfully imported {importResult.imported} compounds.
+                    {importResult.skipped > 0 && ` Skipped ${importResult.skipped} duplicates.`}
+                  </Alert>
+
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <Box component={Paper} variant="outlined" sx={{ p: 2, maxHeight: 200, overflow: 'auto' }}>
+                      <Typography variant="subtitle2" color="error" gutterBottom>
+                        Errors ({importResult.errors.length}):
+                      </Typography>
+                      <List dense>
+                        {importResult.errors.map((err, index) => (
+                          <ListItem key={index}>
+                            <ListItemText
+                              primary={err}
+                              primaryTypographyProps={{ variant: 'body2', color: 'error' }}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseImportDialog}>
+            {importResult ? 'Close' : 'Cancel'}
+          </Button>
+          {!importResult && (
+            <Button
+              onClick={handleImportSubmit}
+              variant="contained"
+              disabled={!importFile || importing}
+            >
+              Import
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

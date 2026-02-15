@@ -61,6 +61,12 @@ export const compoundsAPI = {
   getVersions: (id, params) => api.get(`/compounds/${id}/versions`, { params }),
   rollback: (id, version) => api.post(`/compounds/${id}/rollback/${version}`),
   importChembl: (chemblId) => api.post(`/compounds/import/chembl/${chemblId}`),
+  importFile: (formData) =>
+    api.post('/compounds/import/file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 };
 
 // Predictions API
