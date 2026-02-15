@@ -3,8 +3,11 @@
 A comprehensive MVP platform for managing compound libraries, running ML predictions, tracking experiments, and generating reports for drug discovery applications.
 
 
-<img width="1437" height="787" alt="Screenshot 2026-01-18 at 05 49 30" src="https://github.com/user-attachments/assets/73442577-af1c-45da-b028-db18a0e81ab2" />
+https://github.com/user-attachments/assets/56c7c9da-427e-49e4-8cd5-36c6f90a2e98
 
+#### Data Usage Notice
+> This video uses a portion of:
+> [PubChemLite Compound Collection](https://www.kaggle.com/datasets/thedevastator/pubchemlite-compound-collection-for-exposomics-3) Used for demo only. All rights belong to original creators.
 
 ## Features
 
