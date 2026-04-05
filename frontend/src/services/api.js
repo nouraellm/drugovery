@@ -27,7 +27,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
@@ -49,6 +49,7 @@ export const authAPI = {
   },
   register: (data) => api.post('/auth/register', data),
   getMe: () => api.get('/auth/me'),
+  updateMe: (data) => api.put('/auth/me', data),
 };
 
 // Compounds API
